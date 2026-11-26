@@ -1,0 +1,10 @@
+{
+  "name": "Ibex Screen Guide",
+  "description": "Precision projector throw distance calculator, India climate & power optical advisor, marketplace price-drop tracker, and installer PDF report generator.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,561 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Core Security Primitives ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'sudhakar.ramamoorthy@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function userProfileExists(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId));
+    }
+
+    // --- Entity Validation Blueprints (Synchronized with firebase-blueprint.json) ---
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid',
+          'displayName',
+          'email',
+          'preferredLanguage',
+          'preferredUnit',
+          'newsletterSubscribed',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'displayName',
+          'email',
+          'city',
+          'primaryUseCase',
+          'budgetTier',
+          'signupCompleted',
+          'preferredLanguage',
+          'preferredUnit',
+          'newsletterSubscribed',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && (!('city' in data) || (data.city is string && data.city.size() <= 80))
+        && (!('primaryUseCase' in data) || data.primaryUseCase in ['home-entertainment', 'training-education', 'house-of-god', 'events'])
+        && (!('budgetTier' in data) || data.budgetTier in ['budget', 'premium', 'luxury', 'ultra-luxury'])
+        && (!('signupCompleted' in data) || data.signupCompleted is bool)
+        && data.preferredLanguage in ['en', 'hi', 'ta', 'te', 'kn']
+        && data.preferredUnit in ['ft', 'm']
+        && data.newsletterSubscribed is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProductIdentity(data, productId) {
+      return isValidId(data.id)
+        && data.id == productId
+        && data.brand is string && data.brand.size() >= 1 && data.brand.size() <= 60
+        && data.model is string && data.model.size() >= 1 && data.model.size() <= 100
+        && data.category in ['ust', 'short_throw', 'standard', 'cinema_tele', 'portable']
+        && data.categoryLabel is string && data.categoryLabel.size() >= 1 && data.categoryLabel.size() <= 100
+        && data.imageUrl is string && data.imageUrl.size() >= 1 && data.imageUrl.size() <= 300
+        && data.tagline is string && data.tagline.size() >= 1 && data.tagline.size() <= 300
+        && data.status in ['active', 'archived']
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProductOptics(data) {
+      return data.nativeResolution is string && data.nativeResolution.size() >= 1 && data.nativeResolution.size() <= 80
+        && data.displayTech in ['DLP', '3LCD', 'SXRD Laser']
+        && data.lightSource in ['Tri-Laser', 'Laser', '4LED', 'Dual Light (Laser+LED)', 'LED', 'UHP Lamp']
+        && data.lightSourceLifeHours is number && data.lightSourceLifeHours >= 1000 && data.lightSourceLifeHours <= 100000
+        && data.isoLumens is number && data.isoLumens >= 100 && data.isoLumens <= 50000
+        && data.ansiLumensRef is number && data.ansiLumensRef >= 100 && data.ansiLumensRef <= 50000
+        && data.contrastRatio is string && data.contrastRatio.size() >= 1 && data.contrastRatio.size() <= 80
+        && data.throwRatioMin is number && data.throwRatioMin >= 0.1 && data.throwRatioMin <= 6.0
+        && data.throwRatioMax is number && data.throwRatioMax >= data.throwRatioMin && data.throwRatioMax <= 6.0
+        && data.opticalZoom is string && data.opticalZoom.size() >= 1 && data.opticalZoom.size() <= 100
+        && data.lensShift is string && data.lensShift.size() >= 1 && data.lensShift.size() <= 120
+        && data.lensDetails is string && data.lensDetails.size() >= 1 && data.lensDetails.size() <= 260
+        && data.interchangeableLens is bool;
+    }
+
+    function isValidProductHardware(data) {
+      return data.inputLagMs is number && data.inputLagMs >= 1 && data.inputLagMs <= 200
+        && data.maxRefreshHz is number && data.maxRefreshHz >= 24 && data.maxRefreshHz <= 480
+        && data.hdrSupport is string && data.hdrSupport.size() >= 1 && data.hdrSupport.size() <= 120
+        && data.builtInAudio is string && data.builtInAudio.size() >= 1 && data.builtInAudio.size() <= 120
+        && data.smartOs is string && data.smartOs.size() >= 1 && data.smartOs.size() <= 120
+        && data.weightKg is number && data.weightKg >= 0.2 && data.weightKg <= 100
+        && data.powerWatts is number && data.powerWatts >= 10 && data.powerWatts <= 2500
+        && data.warrantyIndia is string && data.warrantyIndia.size() >= 1 && data.warrantyIndia.size() <= 160
+        && data.serviceNetworkIndia is string && data.serviceNetworkIndia.size() >= 1 && data.serviceNetworkIndia.size() <= 160;
+    }
+
+    function isValidProductCommerce(data) {
+      return data.indiaClimate is map
+        && data.bestFor is list && data.bestFor.size() >= 1 && data.bestFor.size() <= 6 && data.bestFor[0] is string
+        && data.listings is list && data.listings.size() >= 1 && data.listings.size() <= 12 && data.listings[0] is map
+        && data.priceHistory90d is list && data.priceHistory90d.size() >= 1 && data.priceHistory90d.size() <= 12 && data.priceHistory90d[0] is map
+        && data.lowestPriceInr is number && data.lowestPriceInr >= 1000 && data.lowestPriceInr <= 5000000;
+    }
+
+    function isValidProduct(data, productId) {
+      return data.keys().hasAll([
+          'id', 'brand', 'model', 'category', 'categoryLabel', 'imageUrl', 'tagline',
+          'nativeResolution', 'displayTech', 'lightSource', 'lightSourceLifeHours',
+          'isoLumens', 'ansiLumensRef', 'contrastRatio', 'throwRatioMin', 'throwRatioMax',
+          'opticalZoom', 'lensShift', 'lensDetails', 'interchangeableLens',
+          'inputLagMs', 'maxRefreshHz', 'hdrSupport', 'builtInAudio', 'smartOs',
+          'weightKg', 'powerWatts', 'warrantyIndia', 'serviceNetworkIndia',
+          'indiaClimate', 'bestFor', 'listings', 'priceHistory90d', 'lowestPriceInr',
+          'status', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'brand', 'model', 'category', 'categoryLabel', 'imageUrl', 'tagline',
+          'nativeResolution', 'displayTech', 'lightSource', 'lightSourceLifeHours',
+          'isoLumens', 'ansiLumensRef', 'contrastRatio', 'throwRatioMin', 'throwRatioMax',
+          'opticalZoom', 'lensShift', 'lensDetails', 'interchangeableLens',
+          'inputLagMs', 'maxRefreshHz', 'hdrSupport', 'builtInAudio', 'smartOs',
+          'weightKg', 'powerWatts', 'warrantyIndia', 'serviceNetworkIndia',
+          'indiaClimate', 'bestFor', 'listings', 'priceHistory90d', 'lowestPriceInr',
+          'status', 'updatedAt'
+        ])
+        && isValidProductIdentity(data, productId)
+        && isValidProductOptics(data)
+        && isValidProductHardware(data)
+        && isValidProductCommerce(data);
+    }
+
+    function isValidChatMessage(data, userId, messageId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'role',
+          'content',
+          'articleTitle',
+          'articleUrl',
+          'mode',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'role',
+          'content',
+          'articleTitle',
+          'articleUrl',
+          'mode',
+          'createdAt'
+        ])
+        && isValidId(data.id)
+        && data.id == messageId
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.role in ['user', 'assistant']
+        && data.content is string && data.content.size() >= 1 && data.content.size() <= 4000
+        && data.articleTitle is string && data.articleTitle.size() <= 240
+        && data.articleUrl is string && data.articleUrl.size() <= 300
+        && data.mode in ['text', 'voice']
+        && data.createdAt is timestamp;
+    }
+
+    function isValidConfiguration(data, userId, configId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'name',
+          'clientName',
+          'projectLocation',
+          'throwRatio',
+          'screenWidthMeters',
+          'throwDistanceMeters',
+          'aspectRatio',
+          'lightIntensity',
+          'ambientLighting',
+          'surfaceFinish',
+          'purpose',
+          'indiaHeat',
+          'indiaHumidity',
+          'indiaPower',
+          'mountingType',
+          'lensPresetId',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'name',
+          'clientName',
+          'projectLocation',
+          'throwRatio',
+          'screenWidthMeters',
+          'throwDistanceMeters',
+          'aspectRatio',
+          'lightIntensity',
+          'ambientLighting',
+          'surfaceFinish',
+          'purpose',
+          'indiaHeat',
+          'indiaHumidity',
+          'indiaPower',
+          'mountingType',
+          'lensPresetId',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == configId
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.clientName is string && data.clientName.size() <= 120
+        && data.projectLocation is string && data.projectLocation.size() <= 120
+        && data.throwRatio is number && data.throwRatio >= 0.15 && data.throwRatio <= 5.0
+        && data.screenWidthMeters is number && data.screenWidthMeters >= 0.5 && data.screenWidthMeters <= 12.0
+        && data.throwDistanceMeters is number && data.throwDistanceMeters >= 0.1 && data.throwDistanceMeters <= 30.0
+        && data.aspectRatio in ['16:9', '16:10', '2.35:1', '4:3']
+        && data.lightIntensity in ['dark', 'semi_lit', 'bright']
+        && data.ambientLighting in ['blackout', 'curtains', 'daylight_windows', 'overhead_led']
+        && data.surfaceFinish in ['matte_white', 'high_contrast_grey', 'alr_clr', 'painted_wall']
+        && data.purpose in ['cinema', 'gaming', 'casual', 'all']
+        && data.indiaHeat in ['ac_controlled', 'moderate_fan', 'high_heat_non_ac']
+        && data.indiaHumidity in ['dry_dusty', 'moderate', 'coastal_monsoon']
+        && data.indiaPower in ['online_ups', 'inverter_backup', 'frequent_fluctuation']
+        && data.mountingType in ['ceiling', 'table', 'shelf', 'ust_console']
+        && data.lensPresetId is string && data.lensPresetId.size() <= 64
+        && data.notes is string && data.notes.size() <= 1000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPriceWatch(data, userId, watchId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'modelId',
+          'targetPriceInr',
+          'alertEnabled',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'modelId',
+          'targetPriceInr',
+          'alertEnabled',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == watchId
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.modelId is string && data.modelId.size() >= 1 && data.modelId.size() <= 80 && data.modelId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.targetPriceInr is number && data.targetPriceInr >= 5000 && data.targetPriceInr <= 5000000
+        && data.alertEnabled is bool
+        && data.notes is string && data.notes.size() <= 300
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCartItem(data, userId, itemId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'skuId',
+          'itemType',
+          'title',
+          'unitPriceInr',
+          'quantity',
+          'preferredRetailer',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'skuId',
+          'itemType',
+          'title',
+          'unitPriceInr',
+          'quantity',
+          'preferredRetailer',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == itemId
+        && isValidId(data.userId)
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.skuId is string && data.skuId.size() >= 1 && data.skuId.size() <= 80 && data.skuId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.itemType in ['projector', 'screen', 'mount', 'ups']
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 140
+        && data.unitPriceInr is number && data.unitPriceInr >= 500 && data.unitPriceInr <= 5000000
+        && data.quantity is number && data.quantity >= 1 && data.quantity <= 25
+        && data.preferredRetailer is string && data.preferredRetailer.size() >= 1 && data.preferredRetailer.size() <= 80
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    // Public India Projector Catalog & Pricing Database (Admin-writable only)
+    match /products/{productId} {
+      allow get: if isValidId(productId);
+      allow list: if resource.data.status == 'active';
+
+      allow create: if isAdmin()
+        && isValidId(productId)
+        && isValidProduct(incoming(), productId)
+        && incoming().updatedAt == request.time;
+
+      allow update: if isAdmin()
+        && isValidId(productId)
+        && isValidProduct(incoming(), productId)
+        && incoming().id == existing().id
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'brand',
+            'model',
+            'category',
+            'categoryLabel',
+            'imageUrl',
+            'tagline',
+            'nativeResolution',
+            'displayTech',
+            'lightSource',
+            'lightSourceLifeHours',
+            'isoLumens',
+            'ansiLumensRef',
+            'contrastRatio',
+            'throwRatioMin',
+            'throwRatioMax',
+            'opticalZoom',
+            'lensShift',
+            'lensDetails',
+            'interchangeableLens',
+            'inputLagMs',
+            'maxRefreshHz',
+            'hdrSupport',
+            'builtInAudio',
+            'smartOs',
+            'weightKg',
+            'powerWatts',
+            'warrantyIndia',
+            'serviceNetworkIndia',
+            'indiaClimate',
+            'bestFor',
+            'listings',
+            'priceHistory90d',
+            'lowestPriceInr',
+            'status',
+            'updatedAt'
+          ])
+        );
+
+      allow delete: if isAdmin() && isValidId(productId);
+    }
+
+    match /users/{userId} {
+      // Strictly owner-only read; no blanket list on users collection to isolate PII
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName',
+            'city',
+            'primaryUseCase',
+            'budgetTier',
+            'signupCompleted',
+            'preferredLanguage',
+            'preferredUnit',
+            'newsletterSubscribed',
+            'updatedAt'
+          ])
+        );
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Subcollection: Chatbot & Substack Article Clarification Messages
+      match /chatMessages/{messageId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(messageId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(messageId)
+          && isValidChatMessage(incoming(), userId, messageId)
+          && incoming().createdAt == request.time
+          && userProfileExists(userId);
+
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(messageId);
+      }
+
+      // Subcollection: Room & Throw Configurations
+      match /configurations/{configId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(configId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(configId)
+          && isValidConfiguration(incoming(), userId, configId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && userProfileExists(userId);
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(configId)
+          && isValidConfiguration(incoming(), userId, configId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name',
+              'clientName',
+              'projectLocation',
+              'throwRatio',
+              'screenWidthMeters',
+              'throwDistanceMeters',
+              'aspectRatio',
+              'lightIntensity',
+              'ambientLighting',
+              'surfaceFinish',
+              'purpose',
+              'indiaHeat',
+              'indiaHumidity',
+              'indiaPower',
+              'mountingType',
+              'lensPresetId',
+              'notes',
+              'updatedAt'
+            ])
+          )
+          && userProfileExists(userId);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(configId);
+      }
+
+      // Subcollection: Price-Drop Watchlist
+      match /priceWatches/{watchId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(watchId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(watchId)
+          && isValidPriceWatch(incoming(), userId, watchId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && userProfileExists(userId);
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(watchId)
+          && isValidPriceWatch(incoming(), userId, watchId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().modelId == existing().modelId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['targetPriceInr', 'alertEnabled', 'notes', 'updatedAt'])
+          )
+          && userProfileExists(userId);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(watchId);
+      }
+
+      // Subcollection: E-Commerce Extensible Cart / Quote Bag
+      match /cartItems/{itemId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(itemId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && isValidCartItem(incoming(), userId, itemId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && userProfileExists(userId);
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && isValidCartItem(incoming(), userId, itemId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().skuId == existing().skuId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['quantity', 'preferredRetailer', 'unitPriceInr', 'updatedAt'])
+          )
+          && userProfileExists(userId);
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(itemId);
+      }
+    }
+  }
+}

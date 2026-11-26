@@ -1,0 +1,505 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user profile storing sign-up onboarding details, UI preferences, language, measurement unit, and newsletter status.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "city": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "primaryUseCase": {
+          "type": "string",
+          "enum": ["home-entertainment", "training-education", "house-of-god", "events"]
+        },
+        "budgetTier": {
+          "type": "string",
+          "enum": ["budget", "premium", "luxury", "ultra-luxury"]
+        },
+        "signupCompleted": {
+          "type": "boolean"
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "enum": ["en", "hi", "ta", "te", "kn"]
+        },
+        "preferredUnit": {
+          "type": "string",
+          "enum": ["ft", "m"]
+        },
+        "newsletterSubscribed": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "email", "preferredLanguage", "preferredUnit", "newsletterSubscribed", "createdAt", "updatedAt"]
+    },
+    "ProjectorProduct": {
+      "title": "ProjectorProduct",
+      "description": "Database-backed India projector specification, optical geometry, climate rating, and INR marketplace pricing record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "brand": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "model": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "enum": ["ust", "short_throw", "standard", "cinema_tele", "portable"]
+        },
+        "categoryLabel": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "nativeResolution": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "displayTech": {
+          "type": "string",
+          "enum": ["DLP", "3LCD", "SXRD Laser"]
+        },
+        "lightSource": {
+          "type": "string",
+          "enum": ["Tri-Laser", "Laser", "4LED", "Dual Light (Laser+LED)", "LED", "UHP Lamp"]
+        },
+        "lightSourceLifeHours": {
+          "type": "number"
+        },
+        "isoLumens": {
+          "type": "number"
+        },
+        "ansiLumensRef": {
+          "type": "number"
+        },
+        "contrastRatio": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "throwRatioMin": {
+          "type": "number"
+        },
+        "throwRatioMax": {
+          "type": "number"
+        },
+        "opticalZoom": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "lensShift": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "lensDetails": {
+          "type": "string",
+          "maxLength": 260
+        },
+        "interchangeableLens": {
+          "type": "boolean"
+        },
+        "inputLagMs": {
+          "type": "number"
+        },
+        "maxRefreshHz": {
+          "type": "number"
+        },
+        "hdrSupport": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "builtInAudio": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "smartOs": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "weightKg": {
+          "type": "number"
+        },
+        "powerWatts": {
+          "type": "number"
+        },
+        "warrantyIndia": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "serviceNetworkIndia": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "indiaClimate": {
+          "type": "object"
+        },
+        "bestFor": {
+          "type": "array"
+        },
+        "listings": {
+          "type": "array"
+        },
+        "priceHistory90d": {
+          "type": "array"
+        },
+        "lowestPriceInr": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "archived"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "brand",
+        "model",
+        "category",
+        "categoryLabel",
+        "imageUrl",
+        "tagline",
+        "nativeResolution",
+        "displayTech",
+        "lightSource",
+        "lightSourceLifeHours",
+        "isoLumens",
+        "ansiLumensRef",
+        "contrastRatio",
+        "throwRatioMin",
+        "throwRatioMax",
+        "opticalZoom",
+        "lensShift",
+        "lensDetails",
+        "interchangeableLens",
+        "inputLagMs",
+        "maxRefreshHz",
+        "hdrSupport",
+        "builtInAudio",
+        "smartOs",
+        "weightKg",
+        "powerWatts",
+        "warrantyIndia",
+        "serviceNetworkIndia",
+        "indiaClimate",
+        "bestFor",
+        "listings",
+        "priceHistory90d",
+        "lowestPriceInr",
+        "status",
+        "updatedAt"
+      ]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "User chatbot and Substack article clarification turn stored under the authenticated user's profile.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant"]
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "articleTitle": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "articleUrl": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["text", "voice"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "role", "content", "articleTitle", "articleUrl", "mode", "createdAt"]
+    },
+    "ProjectorConfiguration": {
+      "title": "ProjectorConfiguration",
+      "description": "Cloud-synced room geometry, throw ratio calibration, lighting, India climate conditions, and installer metadata.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "clientName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "projectLocation": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "throwRatio": {
+          "type": "number"
+        },
+        "screenWidthMeters": {
+          "type": "number"
+        },
+        "throwDistanceMeters": {
+          "type": "number"
+        },
+        "aspectRatio": {
+          "type": "string",
+          "enum": ["16:9", "16:10", "2.35:1", "4:3"]
+        },
+        "lightIntensity": {
+          "type": "string",
+          "enum": ["dark", "semi_lit", "bright"]
+        },
+        "ambientLighting": {
+          "type": "string",
+          "enum": ["blackout", "curtains", "daylight_windows", "overhead_led"]
+        },
+        "surfaceFinish": {
+          "type": "string",
+          "enum": ["matte_white", "high_contrast_grey", "alr_clr", "painted_wall"]
+        },
+        "purpose": {
+          "type": "string",
+          "enum": ["cinema", "gaming", "casual", "all"]
+        },
+        "indiaHeat": {
+          "type": "string",
+          "enum": ["ac_controlled", "moderate_fan", "high_heat_non_ac"]
+        },
+        "indiaHumidity": {
+          "type": "string",
+          "enum": ["dry_dusty", "moderate", "coastal_monsoon"]
+        },
+        "indiaPower": {
+          "type": "string",
+          "enum": ["online_ups", "inverter_backup", "frequent_fluctuation"]
+        },
+        "mountingType": {
+          "type": "string",
+          "enum": ["ceiling", "table", "shelf", "ust_console"]
+        },
+        "lensPresetId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "clientName",
+        "projectLocation",
+        "throwRatio",
+        "screenWidthMeters",
+        "throwDistanceMeters",
+        "aspectRatio",
+        "lightIntensity",
+        "ambientLighting",
+        "surfaceFinish",
+        "purpose",
+        "indiaHeat",
+        "indiaHumidity",
+        "indiaPower",
+        "mountingType",
+        "lensPresetId",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PriceWatch": {
+      "title": "PriceWatch",
+      "description": "User-saved projector model with target INR price for price-drop alert tracking.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "modelId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "targetPriceInr": {
+          "type": "number"
+        },
+        "alertEnabled": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "modelId", "targetPriceInr", "alertEnabled", "notes", "createdAt", "updatedAt"]
+    },
+    "CartItem": {
+      "title": "CartItem",
+      "description": "E-commerce extensible shortlist/quote bag item synced to user profile for future checkout integration.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "skuId": {
+          "type": "string",
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "itemType": {
+          "type": "string",
+          "enum": ["projector", "screen", "mount", "ups"]
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "unitPriceInr": {
+          "type": "number"
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "preferredRetailer": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "skuId", "itemType", "title", "unitPriceInr", "quantity", "preferredRetailer", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/ProjectorProduct" },
+      "description": "Publicly readable India projector catalog and INR marketplace pricing database. Writes are restricted strictly to verified store administrators."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private authenticated user profile containing sign-up details, PII (email), and app preferences. Strictly owner-only."
+    },
+    "/users/{userId}/chatMessages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Private authenticated user chatbot and Substack article clarification conversation history."
+    },
+    "/users/{userId}/configurations/{configId}": {
+      "schema": { "$ref": "#/entities/ProjectorConfiguration" },
+      "description": "Cloud-synced room throw calibrations and India environment presets owned by the user."
+    },
+    "/users/{userId}/priceWatches/{watchId}": {
+      "schema": { "$ref": "#/entities/PriceWatch" },
+      "description": "Saved India projector models tracked for price drops."
+    },
+    "/users/{userId}/cartItems/{itemId}": {
+      "schema": { "$ref": "#/entities/CartItem" },
+      "description": "E-commerce extensible shortlist/quote bag items for future cart and checkout integration."
+    }
+  }
+}
